@@ -18,6 +18,7 @@ public class Book {
     private Integer stock;
     private Integer bookshelfId;
     private String bookshelfName; // Display
+    private String bookshelfArea; // Display
     private Date createTime;
 
     public Integer getBookId() { return bookId; }
@@ -50,6 +51,8 @@ public class Book {
     public void setBookshelfId(Integer bookshelfId) { this.bookshelfId = bookshelfId; }
     public String getBookshelfName() { return bookshelfName; }
     public void setBookshelfName(String bookshelfName) { this.bookshelfName = bookshelfName; }
+    public String getBookshelfArea() { return bookshelfArea; }
+    public void setBookshelfArea(String bookshelfArea) { this.bookshelfArea = bookshelfArea; }
     public Date getCreateTime() { return createTime; }
     public void setCreateTime(Date createTime) { this.createTime = createTime; }
 }
