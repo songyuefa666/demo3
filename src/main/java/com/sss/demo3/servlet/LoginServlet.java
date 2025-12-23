@@ -52,8 +52,12 @@ public class LoginServlet extends BaseServlet {
 
         Admin admin = adminDao.findByUsername(u);
         if (admin != null && SecurityUtils.verify(p, admin.getPassword())) {
-            session.setAttribute("admin", admin);
-            session.removeAttribute("login_fail_count"); // Reset on success
+            // Regenerate session to mitigate fixation and clear fail counters
+            session.invalidate();
+            HttpSession newSession = req.getSession(true);
+            newSession.removeAttribute("login_fail_count");
+            newSession.removeAttribute("lockout_time");
+            newSession.setAttribute("admin", admin);
             
             // Log login success
             SystemLog log = new SystemLog();
@@ -63,6 +67,7 @@ public class LoginServlet extends BaseServlet {
             new SystemLogDao().insert(log);
             
             resp.sendRedirect("home");
+            return;
         } else {
             session.setAttribute("login_fail_count", failCount + 1);
             req.setAttribute("error", "用户名或密码错误");
