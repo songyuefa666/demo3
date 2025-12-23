@@ -140,8 +140,8 @@ CREATE TABLE borrow_record (
 
 -- 4.1 管理员数据
 INSERT INTO admin (username, password, real_name, phone, register_date, role) VALUES 
-('admin', 'admin123', '超级管理员', '13800138000', NOW(), 'SYS_ADMIN'),
-('operator', 'op123', '图书操作员', '13900139000', NOW(), 'OPERATOR');
+('admin', 'Fo8wOme4XzbdhAi1qShXzQ==$ex2/p6ucoy3u8boRhDkVledvhW0PZP9h86FBR91pSeQ=', '超级管理员', '13800138000', NOW(), 'SYS_ADMIN'),
+('operator', 'B+nkTR7wzk3AbVuy3ZgQug==$K7uu2LhXREhIHqu5FHf13hlCO+nM+875Hcl4gOE09oc=', '图书操作员', '13900139000', NOW(), 'OPERATOR');
 
 -- 4.2 图书馆信息
 INSERT INTO library_info (library_name, address, phone, open_hours, introduction) VALUES 
