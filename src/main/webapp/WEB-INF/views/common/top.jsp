@@ -17,6 +17,7 @@
             </div>
         </div>
         <div style="height: 20px; width: 1px; background: var(--border-color);"></div>
+        <a href="${pageContext.request.contextPath}/login?action=password" class="text-primary" style="font-size: 13px;">修改密码</a>
         <a href="${pageContext.request.contextPath}/login?action=logout" class="text-danger" style="font-size: 13px;">退出</a>
     </div>
 </div>
