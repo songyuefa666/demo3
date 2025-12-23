@@ -9,7 +9,7 @@
 <body>
     <div class="app-layout">
         <jsp:include page="/WEB-INF/views/common/nav.jsp">
-            <jsp:param name="active" value="book"/>
+            <jsp:param name="active" value="bookshelf"/>
         </jsp:include>
         
         <div class="app-main">
