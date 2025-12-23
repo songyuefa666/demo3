@@ -26,6 +26,7 @@ public class AdminDao {
 
             if (rs.next()) {
                 admin = mapRow(rs);
+                upgradeLegacyPassword(admin);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -57,7 +58,9 @@ public class AdminDao {
             ps = conn.prepareStatement(sql);
             rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(mapRow(rs));
+                Admin admin = mapRow(rs);
+                upgradeLegacyPassword(admin);
+                list.add(admin);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -81,6 +84,7 @@ public class AdminDao {
             rs = ps.executeQuery();
             if (rs.next()) {
                 admin = mapRow(rs);
+                upgradeLegacyPassword(admin);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -207,5 +211,38 @@ public class AdminDao {
         }
         admin.setRole(role);
         return admin;
+    }
+
+    /**
+     * Transparently upgrade legacy plaintext passwords to the salted hash format.
+     */
+    private void upgradeLegacyPassword(Admin admin) {
+        if (admin == null) {
+            return;
+        }
+        String stored = admin.getPassword();
+        if (stored == null || stored.isEmpty()) {
+            return;
+        }
+        if (SecurityUtils.isEncryptedFormat(stored)) {
+            return;
+        }
+
+        String encrypted = SecurityUtils.encrypt(stored);
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = DBUtil.getConnection();
+            ps = conn.prepareStatement("UPDATE admin SET password=? WHERE admin_id=?");
+            ps.setString(1, encrypted);
+            ps.setLong(2, admin.getAdminId());
+            ps.executeUpdate();
+            admin.setPassword(encrypted);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("DB Error", e);
+        } finally {
+            DBUtil.close(conn, ps, null);
+        }
     }
 }

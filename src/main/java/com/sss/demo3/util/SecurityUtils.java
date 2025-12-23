@@ -7,6 +7,7 @@ import java.util.Base64;
 public class SecurityUtils {
 
     private static final int SALT_LENGTH = 16;
+    private static final String DELIMITER = "$";
 
     /**
      * Generate a salt
@@ -45,24 +46,25 @@ public class SecurityUtils {
     public static String encrypt(String password) {
         String salt = generateSalt();
         String hash = hashPassword(password, salt);
-        return salt + "$" + hash;
+        return salt + DELIMITER + hash;
+    }
+
+    /**
+     * Determine whether the stored value is in the expected salt$hash format.
+     */
+    public static boolean isEncryptedFormat(String storedValue) {
+        if (storedValue == null || !storedValue.contains(DELIMITER)) {
+            return false;
+        }
+        String[] parts = storedValue.split("\\$", -1);
+        return parts.length == 2 && !parts[0].isEmpty() && !parts[1].isEmpty();
     }
 
     public static boolean verify(String password, String storedValue) {
-        if (storedValue == null || !storedValue.contains("$")) {
-            // Backward compatibility for plain text?
-            // User requested "Security Hardening", so we should strictly enforce hash.
-            // But for existing data (admin/admin123), it will fail.
-            // Let's allow plain text match IF it doesn't look like our hash format, 
-            // OR just fail. Guide says "change password logic", implying strictness.
-            // However, to allow the user to verify the system without manual DB update, 
-            // I will implement a fallback: if verify fails, check plain text equality. 
-            // If plain text matches, return true (and ideally update to hash, but that requires write).
-            // Let's just return false if format doesn't match, unless it matches plain text.
-            return password.equals(storedValue); 
+        if (!isEncryptedFormat(storedValue)) {
+            return false;
         }
         String[] parts = storedValue.split("\\$");
-        if (parts.length != 2) return false;
         String salt = parts[0];
         String hash = parts[1];
         String computedHash = hashPassword(password, salt);
