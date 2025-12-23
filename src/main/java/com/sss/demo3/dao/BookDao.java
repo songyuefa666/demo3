@@ -19,7 +19,7 @@ public class BookDao {
         ResultSet rs = null;
         try {
             conn = DBUtil.getConnection();
-            String sql = "SELECT b.*, bt.type_name, bs.name as bookshelf_name FROM book b " +
+            String sql = "SELECT b.*, bt.type_name, bs.name as bookshelf_name, bs.location as bookshelf_area FROM book b " +
                          "LEFT JOIN book_type bt ON b.book_type_id = bt.id " +
                          "LEFT JOIN bookshelf bs ON b.bookshelf_id = bs.id ";
             
@@ -94,7 +94,7 @@ public class BookDao {
         Book book = null;
         try {
             conn = DBUtil.getConnection();
-            String sql = "SELECT b.*, bt.type_name, bs.name as bookshelf_name FROM book b " +
+            String sql = "SELECT b.*, bt.type_name, bs.name as bookshelf_name, bs.location as bookshelf_area FROM book b " +
                          "LEFT JOIN book_type bt ON b.book_type_id = bt.id " +
                          "LEFT JOIN bookshelf bs ON b.bookshelf_id = bs.id " +
                          "WHERE b.book_id = ?";
@@ -120,7 +120,7 @@ public class BookDao {
         Book book = null;
         try {
             conn = DBUtil.getConnection();
-            String sql = "SELECT b.*, bt.type_name, bs.name as bookshelf_name FROM book b " +
+            String sql = "SELECT b.*, bt.type_name, bs.name as bookshelf_name, bs.location as bookshelf_area FROM book b " +
                          "LEFT JOIN book_type bt ON b.book_type_id = bt.id " +
                          "LEFT JOIN bookshelf bs ON b.bookshelf_id = bs.id " +
                          "WHERE b.barcode = ?";
@@ -264,6 +264,7 @@ public class BookDao {
         b.setStock(rs.getInt("stock"));
         b.setBookshelfId(rs.getInt("bookshelf_id"));
         b.setBookshelfName(rs.getString("bookshelf_name"));
+        b.setBookshelfArea(rs.getString("bookshelf_area"));
         b.setCreateTime(rs.getTimestamp("create_time"));
         return b;
     }
