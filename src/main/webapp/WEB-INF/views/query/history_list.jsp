@@ -22,6 +22,8 @@
 
                 <div class="card">
                     <div class="card-body">
+                        <jsp:include page="/WEB-INF/views/common/message.jsp" />
+
                         <form action="${pageContext.request.contextPath}/query/history" method="get" class="d-flex flex-wrap align-center gap-3 mb-4">
                             <div class="d-flex align-center gap-2">
                                 <label class="text-secondary">读者条码：</label>

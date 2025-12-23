@@ -23,6 +23,8 @@
 
                 <div class="card">
                     <div class="card-body">
+                        <jsp:include page="/WEB-INF/views/common/message.jsp" />
+
                         <div class="table-container">
                             <table class="table">
                                 <thead>
