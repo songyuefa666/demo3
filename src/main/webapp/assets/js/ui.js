@@ -9,7 +9,7 @@ const UI = {
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
         
-        const icon = type === 'success' ? '✓' : '✕';
+        const icon = type === 'success' ? '✓' : (type === 'warning' ? '!' : '✕');
         
         toast.innerHTML = `
             <div class="toast-icon">${icon}</div>

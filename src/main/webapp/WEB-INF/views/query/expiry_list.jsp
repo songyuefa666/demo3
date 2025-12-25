@@ -23,6 +23,27 @@
 
                 <div class="card">
                     <div class="card-body">
+                        <form action="${pageContext.request.contextPath}/query/expiry" method="get" class="d-flex gap-3 align-center flex-wrap mb-4">
+                            <div class="d-flex align-center gap-2">
+                                <label class="text-secondary">读者类型：</label>
+                                <select name="readerTypeId" class="form-control" style="width: 180px;">
+                                    <option value="">全部</option>
+                                    <c:forEach var="t" items="${types}">
+                                        <option value="${t.typeId}" ${param.readerTypeId == t.typeId ? 'selected' : ''}>${t.typeName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <div class="d-flex align-center gap-2">
+                                <label class="text-secondary">借阅开始日期：</label>
+                                <input type="date" name="startDate" value="${param.startDate}" class="form-control" style="width: 170px;">
+                            </div>
+                            <div class="d-flex align-center gap-2">
+                                <label class="text-secondary">借阅结束日期：</label>
+                                <input type="date" name="endDate" value="${param.endDate}" class="form-control" style="width: 170px;">
+                            </div>
+                            <button type="submit" class="btn btn-primary">查询</button>
+                        </form>
+
                         <div class="table-container">
                             <table class="table">
                                 <thead>

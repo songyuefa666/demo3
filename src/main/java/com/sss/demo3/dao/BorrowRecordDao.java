@@ -15,19 +15,44 @@ import java.util.List;
 public class BorrowRecordDao {
 
     public List<BorrowRecord> findExpiringOrOverdue(int days) {
+        return findExpiringOrOverdue(days, null, null, null);
+    }
+
+    public List<BorrowRecord> findExpiringOrOverdue(int days, Integer readerTypeId, String startDate, String endDate) {
         List<BorrowRecord> list = new ArrayList<>();
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             conn = DBUtil.getConnection();
-            String sql = "SELECT br.*, r.reader_barcode, r.name as reader_name, b.barcode as book_barcode, b.name as book_name " +
+            StringBuilder sql = new StringBuilder("SELECT br.*, r.reader_barcode, r.name as reader_name, b.barcode as book_barcode, b.name as book_name " +
                          "FROM borrow_record br " +
                          "JOIN reader r ON br.reader_id = r.reader_id " +
                          "JOIN book b ON br.book_id = b.book_id " +
-                         "WHERE br.status = 1 AND (br.due_date < NOW() OR DATEDIFF(br.due_date, NOW()) <= ?)";
-            ps = conn.prepareStatement(sql);
-            ps.setInt(1, days);
+                         "WHERE br.status = 1 AND (br.due_date < NOW() OR DATEDIFF(br.due_date, NOW()) <= ?) ");
+
+            if (readerTypeId != null) {
+                sql.append("AND r.type_id = ? ");
+            }
+            if (startDate != null && !startDate.isEmpty()) {
+                sql.append("AND br.borrow_date >= ? ");
+            }
+            if (endDate != null && !endDate.isEmpty()) {
+                sql.append("AND br.borrow_date <= ? ");
+            }
+
+            ps = conn.prepareStatement(sql.toString());
+            int idx = 1;
+            ps.setInt(idx++, days);
+            if (readerTypeId != null) {
+                ps.setInt(idx++, readerTypeId);
+            }
+            if (startDate != null && !startDate.isEmpty()) {
+                ps.setString(idx++, startDate + " 00:00:00");
+            }
+            if (endDate != null && !endDate.isEmpty()) {
+                ps.setString(idx++, endDate + " 23:59:59");
+            }
             rs = ps.executeQuery();
             while (rs.next()) {
                 list.add(mapRow(rs));
@@ -196,6 +221,34 @@ public class BorrowRecordDao {
             DBUtil.close(conn, ps, rs);
         }
         return list;
+    }
+
+    public BorrowRecord findActiveByBookBarcode(String bookBarcode) {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        BorrowRecord br = null;
+        try {
+            conn = DBUtil.getConnection();
+            String sql = "SELECT br.*, r.reader_barcode, r.name as reader_name, b.barcode as book_barcode, b.name as book_name " +
+                         "FROM borrow_record br " +
+                         "JOIN reader r ON br.reader_id = r.reader_id " +
+                         "JOIN book b ON br.book_id = b.book_id " +
+                         "WHERE b.barcode = ? AND br.status IN (1, 3) " +
+                         "ORDER BY br.borrow_id DESC LIMIT 1";
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, bookBarcode);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                br = mapRow(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("DB Error", e);
+        } finally {
+            DBUtil.close(conn, ps, rs);
+        }
+        return br;
     }
 
     public BorrowRecord findById(Long id) {

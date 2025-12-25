@@ -43,9 +43,15 @@ public class LibraryInfoDao {
         PreparedStatement ps = null;
         try {
             conn = DBUtil.getConnection();
-            // Check if exists
-            LibraryInfo exist = get();
-            if (exist == null) {
+            // Check if exists without closing the current connection
+            Integer existId = null;
+            PreparedStatement checkStmt = conn.prepareStatement("SELECT id FROM library_info LIMIT 1");
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next()) {
+                    existId = rs.getInt("id");
+                }
+            }
+            if (existId == null) {
                 String sql = "INSERT INTO library_info (library_name, address, phone, open_hours, introduction) VALUES (?, ?, ?, ?, ?)";
                 ps = conn.prepareStatement(sql);
                 ps.setString(1, info.getLibraryName());
@@ -62,7 +68,7 @@ public class LibraryInfoDao {
                 ps.setString(3, info.getPhone());
                 ps.setString(4, info.getOpenHours());
                 ps.setString(5, info.getIntroduction());
-                ps.setInt(6, exist.getId());
+                ps.setInt(6, existId);
                 ps.executeUpdate();
             }
         } catch (SQLException e) {

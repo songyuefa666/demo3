@@ -2,9 +2,11 @@ package com.sss.demo3.servlet;
 
 import com.sss.demo3.dao.BookDao;
 import com.sss.demo3.dao.BorrowRecordDao;
+import com.sss.demo3.dao.ReaderTypeDao;
 import com.sss.demo3.dto.BookRanking;
 import com.sss.demo3.entity.Book;
 import com.sss.demo3.entity.BorrowRecord;
+import com.sss.demo3.entity.ReaderType;
 import com.sss.demo3.util.ValidationUtils;
 
 import javax.servlet.ServletException;
@@ -19,9 +21,14 @@ public class QueryServlet extends BaseServlet {
 
     private BorrowRecordDao borrowRecordDao = new BorrowRecordDao();
     private BookDao bookDao = new BookDao();
+    private ReaderTypeDao readerTypeDao = new ReaderTypeDao();
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding("UTF-8");
+        resp.setContentType("text/html;charset=UTF-8");
+
         // Sync overdue status before any query
         try {
             borrowRecordDao.updateOverdueStatus();
@@ -64,8 +71,16 @@ public class QueryServlet extends BaseServlet {
 
     public void expiry(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Default 3 days
-        List<BorrowRecord> list = borrowRecordDao.findExpiringOrOverdue(3);
+        String readerTypeIdStr = req.getParameter("readerTypeId");
+        int typeIdVal = ValidationUtils.parseInt(readerTypeIdStr, 0);
+        Integer readerTypeId = typeIdVal > 0 ? typeIdVal : null;
+        String startDate = req.getParameter("startDate");
+        String endDate = req.getParameter("endDate");
+
+        List<BorrowRecord> list = borrowRecordDao.findExpiringOrOverdue(3, readerTypeId, startDate, endDate);
         req.setAttribute("list", list);
+        List<ReaderType> types = readerTypeDao.findAll();
+        req.setAttribute("types", types);
         req.getRequestDispatcher("/WEB-INF/views/query/expiry_list.jsp").forward(req, resp);
     }
 

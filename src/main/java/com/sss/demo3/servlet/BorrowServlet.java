@@ -42,6 +42,9 @@ public class BorrowServlet extends BaseServlet {
         }
 
         String readerBarcode = req.getParameter("readerBarcode");
+        if ((readerBarcode == null || readerBarcode.isEmpty()) && req.getAttribute("readerBarcode") != null) {
+            readerBarcode = String.valueOf(req.getAttribute("readerBarcode"));
+        }
         if (readerBarcode != null && !readerBarcode.isEmpty()) {
             Reader reader = readerDao.findByBarcode(readerBarcode);
             if (reader != null) {
@@ -117,6 +120,76 @@ public class BorrowServlet extends BaseServlet {
         } else {
              // If called from elsewhere, maybe just redirect to index
              index(req, resp);
+        }
+    }
+
+    public void returnByBarcode(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String readerBarcode = req.getParameter("readerBarcode");
+        String bookBarcode = req.getParameter("bookBarcode");
+
+        HttpSession session = req.getSession();
+        Admin admin = (Admin) session.getAttribute("admin");
+
+        try {
+            if (bookBarcode != null && !bookBarcode.isEmpty()) {
+                if (!ValidationUtils.isValidBarcode(bookBarcode)) {
+                    req.setAttribute("error", "Invalid book barcode format");
+                    index(req, resp);
+                    return;
+                }
+                BorrowRecord br = borrowRecordDao.findActiveByBookBarcode(bookBarcode);
+                if (br == null) {
+                    req.setAttribute("error", "No active borrow record found for this book");
+                    index(req, resp);
+                    return;
+                }
+                borrowService.returnBook(br.getBorrowId(), admin);
+                req.setAttribute("message", "Return Success!");
+                req.setAttribute("readerBarcode", br.getReaderBarcode());
+                search(req, resp);
+                return;
+            }
+
+            if (readerBarcode == null || readerBarcode.isEmpty()) {
+                req.setAttribute("error", "Please enter reader or book barcode");
+                index(req, resp);
+                return;
+            }
+
+            if (!ValidationUtils.isValidBarcode(readerBarcode)) {
+                req.setAttribute("error", "Invalid reader barcode format");
+                index(req, resp);
+                return;
+            }
+
+            Reader reader = readerDao.findByBarcode(readerBarcode);
+            if (reader == null) {
+                req.setAttribute("error", "Reader not found");
+                index(req, resp);
+                return;
+            }
+
+            List<BorrowRecord> activeList = borrowRecordDao.findActiveByReaderId(reader.getReaderId());
+            if (activeList.isEmpty()) {
+                req.setAttribute("error", "No active borrow record found for this reader");
+                req.setAttribute("readerBarcode", readerBarcode);
+                search(req, resp);
+                return;
+            }
+            if (activeList.size() > 1) {
+                req.setAttribute("warning", "Multiple active records found. Please return from the list below.");
+                req.setAttribute("readerBarcode", readerBarcode);
+                search(req, resp);
+                return;
+            }
+
+            borrowService.returnBook(activeList.get(0).getBorrowId(), admin);
+            req.setAttribute("message", "Return Success!");
+            req.setAttribute("readerBarcode", readerBarcode);
+            search(req, resp);
+        } catch (Exception e) {
+            req.setAttribute("error", e.getMessage());
+            index(req, resp);
         }
     }
 

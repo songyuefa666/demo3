@@ -11,5 +11,5 @@
 </c:if>
 
 <c:if test="${not empty warning}">
-    <div class="alert-server-msg" data-type="error" data-msg="${warning}"></div>
+    <div class="alert-server-msg" data-type="warning" data-msg="${warning}"></div>
 </c:if>

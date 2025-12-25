@@ -18,9 +18,14 @@
             <div class="app-content">
                 <div class="d-flex justify-between align-center mb-4">
                     <h2>读者档案</h2>
-                    <a href="list?action=add" class="btn btn-primary">
-                        <span style="font-size: 16px; margin-right: 4px;">+</span> 新增读者
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="type" class="btn btn-ghost" style="background-color: var(--system-gray6);">
+                            管理类型
+                        </a>
+                        <a href="list?action=add" class="btn btn-primary">
+                            <span style="font-size: 16px; margin-right: 4px;">+</span> 新增读者
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card">

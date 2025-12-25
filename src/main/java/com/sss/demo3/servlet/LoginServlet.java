@@ -26,9 +26,14 @@ public class LoginServlet extends BaseServlet {
     public void login(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
         
+        String u = req.getParameter("username");
+        String p = req.getParameter("password");
+
         // Basic Lockout Check
         Integer failCount = (Integer) session.getAttribute("login_fail_count");
         if (failCount == null) failCount = 0;
+
+        boolean lockoutActive = false;
         if (failCount >= 5) {
             Long lockoutTime = (Long) session.getAttribute("lockout_time");
             if (lockoutTime == null) {
@@ -36,19 +41,14 @@ public class LoginServlet extends BaseServlet {
                 session.setAttribute("lockout_time", lockoutTime);
             }
             if (System.currentTimeMillis() - lockoutTime < 5 * 60 * 1000) { // 5 minutes
-                req.setAttribute("error", "登录失败次数过多，请5分钟后再试");
-                req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);
-                return;
+                lockoutActive = true;
             } else {
-                // Reset
+                // Reset after lockout window
                 session.removeAttribute("login_fail_count");
                 session.removeAttribute("lockout_time");
                 failCount = 0;
             }
         }
-
-        String u = req.getParameter("username");
-        String p = req.getParameter("password");
 
         Admin admin = adminDao.findByUsername(u);
         if (admin != null && SecurityUtils.verify(p, admin.getPassword())) {
@@ -67,6 +67,11 @@ public class LoginServlet extends BaseServlet {
             resp.sendRedirect("home");
             return;
         } else {
+            if (lockoutActive) {
+                req.setAttribute("error", "登录失败次数过多，请5分钟后再试");
+                req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);
+                return;
+            }
             session.setAttribute("login_fail_count", failCount + 1);
             req.setAttribute("error", "用户名或密码错误");
             req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);

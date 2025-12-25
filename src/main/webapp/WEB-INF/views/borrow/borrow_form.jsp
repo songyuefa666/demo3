@@ -35,6 +35,21 @@
                     </div>
                 </div>
 
+                <div class="card" style="margin-top: 16px;">
+                    <div class="card-body">
+                        <form action="borrow?action=returnByBarcode" method="post" class="d-flex align-center gap-4">
+                            <div style="flex: 1;">
+                                <label class="form-label">归还操作</label>
+                                <div class="d-flex gap-2" style="flex-wrap: wrap;">
+                                    <input type="text" name="readerBarcode" class="form-control" style="min-width: 220px; font-size: 16px; padding: 12px;" placeholder="读者条形码（可选）">
+                                    <input type="text" name="bookBarcode" class="form-control" style="min-width: 220px; font-size: 16px; padding: 12px;" placeholder="图书条形码（推荐）">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-secondary btn-lg" style="margin-top: 24px;">确认归还</button>
+                        </form>
+                    </div>
+                </div>
+
                 <c:if test="${not empty reader}">
                     <div style="display: grid; grid-template-columns: 300px 1fr; gap: 24px; margin-bottom: 24px;">
                         <!-- Reader Info Card -->
@@ -91,7 +106,7 @@
                                         </div>
                                     </div>
                                 </form>
-                                
+
                                 <div style="margin-top: 30px;">
                                     <h4 style="font-size: 14px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 12px;">快捷说明</h4>
                                     <ul style="padding-left: 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.6;">

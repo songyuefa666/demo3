@@ -57,14 +57,12 @@ public class BorrowService {
             
             // System param limit
             List<SysParam> params = sysParamDao.getAll();
-            int sysMaxBorrowNum = Integer.MAX_VALUE;
-            for (SysParam p : params) {
-                if ("max_borrow_num".equals(p.getParamName())) {
-                    sysMaxBorrowNum = Integer.parseInt(p.getParamValue());
-                    break;
-                }
+            Integer sysMaxBorrowNum = getSysParamInt(params, "max_borrow_num");
+            Integer sysMaxBorrowDays = getSysParamInt(params, "max_borrow_days");
+            int limit = maxBorrowNum;
+            if (sysMaxBorrowNum != null && sysMaxBorrowNum > 0) {
+                limit = Math.min(limit, sysMaxBorrowNum);
             }
-            int limit = Math.min(maxBorrowNum, sysMaxBorrowNum);
             
             int currentBorrowCount = borrowRecordDao.countActiveByReaderId(reader.getReaderId());
             if (currentBorrowCount >= limit) throw new Exception("Borrow limit exceeded (Max: " + limit + ")");
@@ -75,8 +73,12 @@ public class BorrowService {
             br.setBookId(book.getBookId());
             br.setBorrowDate(new Date());
             
+            int maxBorrowDays = rt.getMaxBorrowDays();
+            if (sysMaxBorrowDays != null && sysMaxBorrowDays > 0) {
+                maxBorrowDays = Math.min(maxBorrowDays, sysMaxBorrowDays);
+            }
             Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.DAY_OF_YEAR, rt.getMaxBorrowDays());
+            cal.add(Calendar.DAY_OF_YEAR, maxBorrowDays);
             br.setDueDate(cal.getTime());
             
             br.setRenewTimes(0);
@@ -122,7 +124,13 @@ public class BorrowService {
                 if (days > 0) {
                     Reader reader = readerDao.findById(br.getReaderId());
                     ReaderType rt = readerTypeDao.findById(reader.getTypeId());
-                    fine = days * rt.getFinePerDay();
+                    List<SysParam> params = sysParamDao.getAll();
+                    Double sysFinePerDay = getSysParamDouble(params, "fine_per_day");
+                    double finePerDay = rt.getFinePerDay();
+                    if (sysFinePerDay != null && sysFinePerDay > 0) {
+                        finePerDay = sysFinePerDay;
+                    }
+                    fine = days * finePerDay;
                 }
             }
             br.setFine(fine);
@@ -156,23 +164,22 @@ public class BorrowService {
 
             // Check Max Renew Times
             List<SysParam> params = sysParamDao.getAll();
-            int maxRenewTimes = 0;
-            for (SysParam p : params) {
-                if ("max_renew_count".equals(p.getParamName())) {
-                    maxRenewTimes = Integer.parseInt(p.getParamValue());
-                    break;
-                }
-            }
-            
-            if (br.getRenewTimes() >= maxRenewTimes) throw new Exception("Max renew times exceeded");
+            Integer maxRenewTimes = getSysParamInt(params, "max_renew_count");
+            Integer sysMaxBorrowDays = getSysParamInt(params, "max_borrow_days");
+            int maxRenewLimit = (maxRenewTimes != null) ? maxRenewTimes : 0;
+            if (br.getRenewTimes() >= maxRenewLimit) throw new Exception("Max renew times exceeded");
 
             // Update Due Date
             Reader reader = readerDao.findById(br.getReaderId());
             ReaderType rt = readerTypeDao.findById(reader.getTypeId());
             
+            int extendDays = rt.getMaxBorrowDays();
+            if (sysMaxBorrowDays != null && sysMaxBorrowDays > 0) {
+                extendDays = Math.min(extendDays, sysMaxBorrowDays);
+            }
             Calendar cal = Calendar.getInstance();
             cal.setTime(br.getDueDate());
-            cal.add(Calendar.DAY_OF_YEAR, rt.getMaxBorrowDays()); // Extend by max borrow days
+            cal.add(Calendar.DAY_OF_YEAR, extendDays); // Extend by max borrow days
             br.setDueDate(cal.getTime());
             
             br.setRenewTimes(br.getRenewTimes() + 1);
@@ -190,5 +197,37 @@ public class BorrowService {
             DBUtil.rollbackTransaction();
             throw e;
         }
+    }
+
+    private Integer getSysParamInt(List<SysParam> params, String name) {
+        if (params == null) {
+            return null;
+        }
+        for (SysParam p : params) {
+            if (name.equals(p.getParamName())) {
+                try {
+                    return Integer.parseInt(p.getParamValue());
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Double getSysParamDouble(List<SysParam> params, String name) {
+        if (params == null) {
+            return null;
+        }
+        for (SysParam p : params) {
+            if (name.equals(p.getParamName())) {
+                try {
+                    return Double.parseDouble(p.getParamValue());
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        }
+        return null;
     }
 }

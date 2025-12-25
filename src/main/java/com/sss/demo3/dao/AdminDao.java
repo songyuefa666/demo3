@@ -49,6 +49,7 @@ public class AdminDao {
 
     public java.util.List<Admin> findAll() {
         java.util.List<Admin> list = new java.util.ArrayList<>();
+        java.util.List<Admin> legacyList = new java.util.ArrayList<>();
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -59,14 +60,19 @@ public class AdminDao {
             rs = ps.executeQuery();
             while (rs.next()) {
                 Admin admin = mapRow(rs);
-                upgradeLegacyPassword(admin);
                 list.add(admin);
+                if (!SecurityUtils.isEncryptedFormat(admin.getPassword())) {
+                    legacyList.add(admin);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("DB Error", e);
         } finally {
             DBUtil.close(conn, ps, rs);
+        }
+        for (Admin admin : legacyList) {
+            upgradeLegacyPassword(admin);
         }
         return list;
     }

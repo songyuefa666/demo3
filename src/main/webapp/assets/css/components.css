@@ -372,3 +372,4 @@ select.form-control {
 
 .toast-success .toast-icon { color: var(--system-green); }
 .toast-error .toast-icon { color: var(--system-red); }
+.toast-warning .toast-icon { color: var(--system-orange, #ff9500); }
